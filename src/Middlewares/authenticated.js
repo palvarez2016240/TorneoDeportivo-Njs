@@ -1,27 +1,26 @@
-'Use strict'
+"use strict"
 
 var jwt = require("jwt-simple");
 var moment = require("moment");
-var secret = 'clave_secreta';
+var secret = "IN6AV";
 
-exports.ensureAuth = function (req, res, next) {
+exports.ensureAuth = function(req, res , next ){
     if(!req.headers.authorization){
-        return res.status(404).send({mensaje: 'La peticion no tiene la cabecera de Autenticacion'})
+        return res.status(404).send({mensaje:"La petición no tiene Autentificación"});
     }
-   
-    var token = req.headers.authorization.replace(/['"]+/g, '')
-
-    try{
+   var token = req.headers.authorization.replace(/['"]+/g,'')
+    try {
         var payload = jwt.decode(token, secret);
-        if(payload.exp <= moment().unix()){
-            return res.status(401)({mensaje: 'El token ya expiro'});
+        if(payload.exp <= moment.unix()){
+            return res.status(401).send({
+                mensaje:"EL TOKEN YA ESPIRO"
+            });
         }
-    }catch (error){
+    } catch (error) {
         return res.status(404).send({
-            mensaje: 'El token no es valido'
+            mensaje: "EL TOKEN NO ES VALIDO"
         })
     }
-
     req.user = payload;
     next();
 }

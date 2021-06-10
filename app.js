@@ -1,21 +1,20 @@
 'use strict'
 
-// VARIABLES
+
 const express = require("express");
 const app = express();
-const bodyParser = require('body-parser');
-const cors = require("cors")
+const bodyParser = require("body-parser");
+//const cors = require("cors");
 
-// IMPORTACION DE RUTAS
-var rutas = require("./src/rutas/rutas");
+var usuario_ruta = require("./src/rutas/usuario.ruta");
+var equipo_ruta = require("./src/rutas/equipo.ruta")
 
-// MIDDLEWARES
-app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
-app.use(cors());
 
-// APLICACION DE RUTAS
-app.use('/api', rutas);
+//app.use(cors());
 
-//EXPORTAR
-module.exports = app;
+app.use('/api', usuario_ruta,equipo_ruta);
+
+
+module.exports = app
