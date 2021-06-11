@@ -95,7 +95,7 @@ function Registrar(req, res) {
     let User1 = new User();
     let params = req.body;
 
-    if (params.nombres && params.email && params.password && params.email) {
+    if (params.nombres && params.email && params.password && params.apellidos) {
         User1.nombres = params.nombres;
         User1.apellidos = params.apellidos;
         User1.usuario = params.usuario;

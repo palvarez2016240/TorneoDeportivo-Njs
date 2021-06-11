@@ -12,10 +12,7 @@ api.post('/registrar', usuarioControlador.Registrar);
 api.put('/EditarUser/:id', md_autorizacion.ensureAuth, usuarioControlador.EditarUser);
 api.delete('/EliminarUser/:id', md_autorizacion.ensureAuth, usuarioControlador.EliminarUser);
 api.get('/AllUser', md_autorizacion.ensureAuth,usuarioControlador.ObtenerUser);
-/*api.get("/BuscarHotel",usuarioControlador.BuscarHotel);
-api.get("/MostrarHotel",usuarioControlador.MostrarHotel);
-api.get("/HabitacionHotel/:id",md_autorizacion.ensureAuth, usuarioControlador.HabitacionHotel);
-api.post("/Reservacion/:id",md_autorizacion.ensureAuth,usuarioControlador.Reservacion)*/
+
 
 
 module.exports = api;
