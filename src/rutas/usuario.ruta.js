@@ -12,6 +12,7 @@ api.post('/registrar', usuarioControlador.Registrar);
 api.put('/EditarUser/:id', md_autorizacion.ensureAuth, usuarioControlador.EditarUser);
 api.delete('/EliminarUser/:id', md_autorizacion.ensureAuth, usuarioControlador.EliminarUser);
 api.get('/AllUser', md_autorizacion.ensureAuth,usuarioControlador.ObtenerUser);
+api.get('/UserID/:id', md_autorizacion.ensureAuth,usuarioControlador.obtenerUsuarioID);
 
 
 
