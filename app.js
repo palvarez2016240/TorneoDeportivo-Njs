@@ -8,13 +8,14 @@ const cors = require("cors");
 
 var usuario_ruta = require("./src/rutas/usuario.ruta");
 var equipo_ruta = require("./src/rutas/equipo.ruta")
+var liga_ruta = require("./src/rutas/liga.ruta")
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
 
 app.use(cors());
 
-app.use('/api', usuario_ruta,equipo_ruta);
+app.use('/api', usuario_ruta,equipo_ruta,liga_ruta);
 
 
 module.exports = app
