@@ -6,7 +6,6 @@ var Schema = mongoose.Schema;
 var LigaShema = Schema({
     nombres: String,
     usuario: { type:Schema.Types.ObjectId, ref: "usuario"},
-
 })
 
 module.exports = mongoose.model("liga", LigaShema);

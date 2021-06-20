@@ -8,12 +8,6 @@ var liga = require("../modelos/liga.model");
 //  Buscar un equipo por su id
 function BuscarEquipo(req, res) {
 
-    //Se revisa si el solicita la funcion es rol admin (No se para que, pero ok)
-    let idEquipo = req.params.id;
-    if (req.user.rol != "ROL_ADMINAPP") {
-        return res.status(500).send({ mensaje: "No puedes ver estos clubs" });
-    }
-
     //Se busca el equipo por su id
     Equipo.findOne({ _id: idEquipo }).exec((err, equipoEncontrado) => {
         if (err) return res.status(500).send({ mensaje: "Error en la solicitud" });
@@ -33,6 +27,11 @@ function CrearEquipo(req, res) {
 
     //Se revisa parametros correctos
     if (params.nombres) {
+
+        //Validar que el que pide la solictud sea rol usuario
+        if (req.user.rol != 'ROL_USER') {
+            return res.status(500).send({ mensaje: "Solo el usuario puede agregar un equipo" })
+        }
 
         //Se busca al usuario si existe
         User.findOne({ _id: idUser }, (err, userFound) => {
@@ -133,8 +132,7 @@ function editarEquipo(req, res) {
 
         //Validar rol
         if (req.user.sub != idUsuario) {
-            if (req.user.rol != "ROL_ADMINAPP")
-                return res.status(500).send({ mensaje: "Solo el ADMIN o la misma se puede modificar" })
+            return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
         }
 
         //Validar parametros correctos para editar
@@ -192,10 +190,9 @@ function eliminarEquipo(req, res) {
         if (!equipoEncontrado) return res.status(500).send({ mensaje: "El equipo no existe" })
         idUsuario = equipoEncontrado.usuario;
 
-        //Validar rol
+        //Validar usuario
         if (req.user.sub != idUsuario) {
-            if (req.user.rol != "ROL_ADMINAPP")
-                return res.status(500).send({ mensaje: "Solo el ADMIN o la misma se puede modificar" })
+            return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
         }
 
         //Eliminar el equipo
