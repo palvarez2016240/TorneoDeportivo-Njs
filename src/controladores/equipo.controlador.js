@@ -123,12 +123,16 @@ function editarEquipo(req, res) {
     var params = req.body;
     var idEquipo = req.params.idEquipo;
     var idUsuario;
+    var nombreAntiguo;
+    var ligaAntigua;
 
     //Verificar si el equipo existe
     Equipo.findOne({ _id: idEquipo }).exec((err, equipoEncontrado) => {
         if (err) return res.status(500).send({ mensaje: "Error" });
-        if (equipoEncontrado.length === 0) return res.status(500).send({ mensaje: "El equipo no existe" })
+        if (!equipoEncontrado) return res.status(500).send({ mensaje: "El equipo no existe" })
         idUsuario = equipoEncontrado.usuario;
+        nombreAntiguo = equipoEncontrado.nombres;
+        ligaAntigua = equipoEncontrado.liga;
 
         //Validar rol
         if (req.user.sub != idUsuario) {
@@ -143,13 +147,22 @@ function editarEquipo(req, res) {
         //Eliminar el parametro de usuario
         delete params.usuario;
 
-        //Verificar que el nuevo nombre no exista
-        Equipo.findOne({ nombres: params.nombres }).exec((err, equipoEncontrado) => {
-            if (err) return res.status(500).send({ mensaje: "Error" });
-            console.log(equipoEncontrado)
-            if (equipoEncontrado) {
-                return res.status(500).send({ mensaje: "El equipo ya existe" })
-            }
+        //Validar si lo que desea editar es el nombre
+        if (nombreAntiguo != params.nombres) {
+
+            //Verificar que el nuevo nombre no exista
+            Equipo.find({
+                $or: [
+                    { nombres: params.nombres },
+                ]
+            }).exec((err, encontrados) => {
+                if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
+                if (encontrados && encontrados.length >= 1) {
+                    return res.status(500).send({ mensaje: "El equipo ya existe" });
+                }
+            })
+
+        } else {
 
             //Verificar que no hayan mas de 10 equipos en la liga
             Equipo.find({ liga: params.liga }).exec((err, equipoEncontrado) => {
@@ -158,11 +171,16 @@ function editarEquipo(req, res) {
                     return res.status(500).send({ mensaje: "Solo puede haber 10 equipos por liga" })
                 } else {
 
-                    //Busqueda para ver si la liga existe
-                    liga.findOne({ nombres: params.liga }).exec((err, ligaEncontrada) => {
-                        if (err) return res.status(500).send({ mensaje: "Error" });
-                        if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" })
+                    //Validar si lo que desea editar es la liga
+                    if (ligaAntigua != params.liga) {
 
+                        //Busqueda para ver si la liga existe
+                        liga.findOne({ nombres: params.liga }).exec((err, ligaEncontrada) => {
+                            if (err) return res.status(500).send({ mensaje: "Error" });
+                            if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" })
+                        })
+
+                    } else {
 
                         //Editar equipo
                         Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
@@ -170,10 +188,10 @@ function editarEquipo(req, res) {
                             if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
                             return res.status(200).send({ equipoActualizado })
                         })
-                    })
+                    }
                 }
             })
-        })
+        }
     })
 
 }
