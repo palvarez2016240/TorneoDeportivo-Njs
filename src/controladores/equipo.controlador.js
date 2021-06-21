@@ -39,51 +39,41 @@ function CrearEquipo(req, res) {
                 return res.status(500).send({ ok: false, message: "Error general" });
             } else if (userFound) {
 
-                //Busqueda para ver si el usuario ya tiene un equipo
-                Equipo.findOne({ usuario: userFound._id }, (err, teamFound) => {
-                    if (err) {
-                        return res.status(500).send({ message: "Error general" });
-                    } else if (teamFound) {
-                        return res.status(500).send({ message: "El usuario ya tiene un equipo", });
+                //Busqueda para ver si el equipo ya existe
+                Equipo.find({ $or: [{ nombres: params.nombres },] }).exec((err, equipoEncontrado) => {
+                    if (err) { return res.status(500).send({ mensaje: "Error" }) }
+                    if (equipoEncontrado && equipoEncontrado.length >= 1) {
+                        return res.status(500).send({ mensaje: "El equipo ya existe" })
                     } else {
 
-                        //Busqueda para ver si el equipo ya existe
-                        Equipo.find({ $or: [{ nombres: params.nombres },] }).exec((err, equipoEncontrado) => {
-                            if (err) { return res.status(500).send({ mensaje: "Error" }) }
-                            if (equipoEncontrado && equipoEncontrado.length >= 1) {
-                                return res.status(500).send({ mensaje: "El equipo ya existe" })
-                            } else {
+                        //Busqueda para ver si la liga existe
+                        liga.findOne({ _id: idLiga }).exec((err, ligaEncontrada) => {
+                            if (err) return res.status(500).send({ mensaje: "Error" });
+                            if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" });
 
-                                //Busqueda para ver si la liga existe
-                                liga.findOne({ _id: idLiga }).exec((err, ligaEncontrada) => {
-                                    if (err) return res.status(500).send({ mensaje: "Error" });
-                                    if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" });
+                            //Validar que ni hayan mas de 10 equipos en la liga
+                            Equipo.find({ liga: idLiga }).exec((err, equipoEncontrado) => {
+                                if (err) return res.status(500).send({ mensaje: "Error" });
+                                if (equipoEncontrado && equipoEncontrado.length >= 10) {
+                                    return res.status(500).send({ mensaje: "Solo puede haber 10 equipos por liga" })
+                                } else {
 
-                                    //Validar que ni hayan mas de 10 equipos en la liga
-                                    Equipo.find({ liga: idLiga }).exec((err, equipoEncontrado) => {
-                                        if (err) return res.status(500).send({ mensaje: "Error" });
-                                        if (equipoEncontrado && equipoEncontrado.length >= 10) {
-                                            return res.status(500).send({ mensaje: "Solo puede haber 10 equipos por liga" })
-                                        } else {
+                                    //Ingresar parametros
+                                    equipo.nombres = params.nombres;
+                                    equipo.usuario = idUser;
+                                    equipo.liga = idLiga;
 
-                                            //Ingresar parametros
-                                            equipo.nombres = params.nombres;
-                                            equipo.usuario = idUser;
-                                            equipo.liga = idLiga;
-
-                                            //Guaradar los datos ingresados
-                                            equipo.save((err, teamSaved) => {
-                                                if (err) {
-                                                    return res.status(500).send({ ok: false, message: "Error general" });
-                                                } else if
-                                                    (teamSaved) {
-                                                    return res.status(500).send({ teamSaved });
-                                                }
-                                            });
+                                    //Guaradar los datos ingresados
+                                    equipo.save((err, teamSaved) => {
+                                        if (err) {
+                                            return res.status(500).send({ ok: false, message: "Error general" });
+                                        } else if
+                                            (teamSaved) {
+                                            return res.status(500).send({ teamSaved });
                                         }
-                                    })
-                                })
-                            }
+                                    });
+                                }
+                            })
                         })
                     }
                 })

@@ -25,31 +25,21 @@ function CrearLiga(req, res) {
                 return res.status(500).send({ message: "Error general" });
             } else if (userFound) {
 
-                //Validar si el usuario ya creo una liga (No se para que)
-                Liga.findOne({ usuario: userFound._id }, (err, teamFound) => {
+                //Inyectar datos
+                liga.nombres = params.nombres;
+                liga.usuario = idUser;
+
+                //Guardar las datos
+                liga.save((err, ligaGuardada) => {
                     if (err) {
                         return res.status(500).send({ message: "Error general" });
-                    } else if (teamFound) {
-                        return res.status(500).send({ message: "Ese usuario ya creo una liga", });
+                    } else if (ligaGuardada) {
+                        return res.status(500).send({
+                            message: "Liga guardada correctamente"
+                        });
                     } else {
-
-                        //Inyectar datos
-                        liga.nombres = params.nombres;
-                        liga.usuario = idUser;
-
-                        //Guaradar las datos
-                        liga.save((err, ligaGuardada) => {
-                            if (err) {
-                                return res.status(500).send({ message: "Error general" });
-                            } else if (ligaGuardada) {
-                                return res.status(500).send({
-                                    message: "Liga guardada correctamente"
-                                });
-                            } else {
-                                return res.status(500).send({
-                                    message: "Error al guardar el liga",
-                                });
-                            }
+                        return res.status(500).send({
+                            message: "Error al guardar el liga",
                         });
                     }
                 });
