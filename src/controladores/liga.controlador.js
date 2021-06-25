@@ -153,7 +153,7 @@ function ligaId(req, res) {
     Liga.findById(idLiga, (err, ligaEncontrada)=>{
         if (err) return res.status(500).send({ mensaje: "Error en la solicitud" });
         if (!ligaEncontrada) return res.status(500).send({mensaje: "La liga no existe"});
-        return res.status(500).send({ligaEncontrada})
+        return res.status(200).send({ligaEncontrada})
     })
 }
 
