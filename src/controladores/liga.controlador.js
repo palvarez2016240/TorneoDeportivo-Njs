@@ -145,9 +145,23 @@ function ObterLigas(req, res) {
 }
 
 
+//  Buscar liga por id
+function ligaId(req, res) {
+    var idLiga = req.params.idLiga;
+
+    //Hacer la busqueda
+    Liga.findById(idLiga, (err, ligaEncontrada)=>{
+        if (err) return res.status(500).send({ mensaje: "Error en la solicitud" });
+        if (!ligaEncontrada) return res.status(500).send({mensaje: "La liga no existe"});
+        return res.status(500).send({ligaEncontrada})
+    })
+}
+
+
 module.exports = {
     CrearLiga,
     EditarLiga,
     EliminarLiga,
-    ObterLigas
+    ObterLigas,
+    ligaId
 }
