@@ -103,9 +103,6 @@ function EliminarLiga(req, res) {
     let LigaId = req.params.id
     var idUsuario;
 
-    //Eliminar el parametro de usuario
-    delete params.usuario;
-
     //Buscar si la liga existe
     Liga.findOne({ _id: LigaId }).exec((err, ligaEncontrada) => {
         if (err) return res.status(500).send({ mensaje: "Error" });
