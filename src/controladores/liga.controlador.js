@@ -34,7 +34,7 @@ function CrearLiga(req, res) {
                     if (err) {
                         return res.status(500).send({ message: "Error general" });
                     } else if (ligaGuardada) {
-                        return res.status(500).send({
+                        return res.status(200).send({
                             message: "Liga guardada correctamente"
                         });
                     } else {
@@ -137,7 +137,7 @@ function EliminarLiga(req, res) {
 function ObterLigas(req, res) {
 
     //Busqueda de las ligas
-    Liga.find((err, ligaEncontrada) => {
+    Liga.find({usuario : req.user.sub},(err, ligaEncontrada) => {
         if (err) return res.status(500).send({ mensaje: "Error en la petición de Ligas" });
         if (ligaEncontrada.length === 0) return res.status(500).send({ mensaje: 'No existen las ligas' });
         return res.status(200).send({ ligaEncontrada })
