@@ -193,7 +193,7 @@ function ObtenerUser(req, res) {
         return res.status(500).send({ mensaje: "No ver los usuarios" })
     }
     User.find({}).exec((err, allUser) => {
-        return res.status(200).send({ allUser: allUser })
+        return res.status(200).send({ allUser })
     })
 }
 
