@@ -132,9 +132,10 @@ function EliminarLiga(req, res) {
 
 //  Ver las ligas
 function ObterLigas(req, res) {
+    var idUsuario = req.user.sub;
 
-    //Busqueda de las ligas
-    Liga.find({usuario : req.user.sub},(err, ligaEncontrada) => {
+    //Busqueda de las ligas que le pertence al usuario
+    Liga.find({ usuario: idUsuario }).exec((err, ligaEncontrada)=> {
         if (err) return res.status(500).send({ mensaje: "Error en la petición de Ligas" });
         if (ligaEncontrada.length === 0) return res.status(500).send({ mensaje: 'No existen las ligas' });
         return res.status(200).send({ ligaEncontrada })
@@ -142,15 +143,25 @@ function ObterLigas(req, res) {
 }
 
 
+
 //  Buscar liga por id
 function ligaId(req, res) {
     var idLiga = req.params.idLiga;
+    var idUsuario = req.user.sub;
+    var usuarioCorrecto;
 
     //Hacer la busqueda
-    Liga.findById(idLiga, (err, ligaEncontrada)=>{
+    Liga.findById(idLiga, (err, ligaEncontrada) => {
         if (err) return res.status(500).send({ mensaje: "Error en la solicitud" });
-        if (!ligaEncontrada) return res.status(500).send({mensaje: "La liga no existe"});
-        return res.status(200).send({ligaEncontrada})
+        if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" });
+        usuarioCorrecto = ligaEncontrada.usuario;
+
+        // Un if para ver si la liga le pertenece
+        if (idUsuario != usuarioCorrecto) {
+            return res.status(500).send({ mensaje: "Esta liga no le pertenece" });
+        }
+
+        return res.status(200).send({ ligaEncontrada });
     })
 }
 
