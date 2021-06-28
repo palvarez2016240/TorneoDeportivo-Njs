@@ -25,26 +25,38 @@ function CrearLiga(req, res) {
                 return res.status(500).send({ message: "Error general" });
             } else if (userFound) {
 
-                //Inyectar datos
-                liga.nombres = params.nombres;
-                liga.usuario = idUser;
-
-                //Guardar las datos
-                liga.save((err, ligaGuardada) => {
-                    if (err) {
-                        return res.status(500).send({ message: "Error general" });
-                    } else if (ligaGuardada) {
-                        return res.status(200).send({
-                            message: "Liga guardada correctamente"
-                        });
-                    } else {
-                        return res.status(500).send({
-                            message: "Error al guardar el liga",
-                        });
+                //Ver si el nombre de la liga existe
+                Liga.find({
+                    $or: [
+                        { nombres: params.nombres }
+                    ]
+                }).exec((err, ligaEncontrada) => {
+                    if (err) return res.status(500).send({ mensaje: "Error" });
+                    if (ligaEncontrada && ligaEncontrada.length >= 1) {
+                        return res.status(500).send({ mensaje: "La liga ya existe" });
                     }
-                });
+
+                    //Inyectar datos
+                    liga.nombres = params.nombres;
+                    liga.usuario = idUser;
+
+                    //Guardar las datos
+                    liga.save((err, ligaGuardada) => {
+                        if (err) {
+                            return res.status(500).send({ message: "Error general" });
+                        } else if (ligaGuardada) {
+                            return res.status(200).send({
+                                ligaGuardada
+                            });
+                        } else {
+                            return res.status(500).send({
+                                message: "Error al guardar la liga",
+                            });
+                        }
+                    });
+                })
             } else {
-                return res.status(500).send({ message: "NO existe el usuario" });
+                return res.status(500).send({ message: "No existe el usuario" });
             }
         });
     } else {
