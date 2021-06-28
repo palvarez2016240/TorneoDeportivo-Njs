@@ -3,6 +3,8 @@
 var User = require("../modelos/usuario.model");
 var Equipo = require("../modelos/equipos.model");
 var liga = require("../modelos/liga.model");
+var fs = require('fs');
+var path = require('path');
 
 
 //  Buscar un equipo por su id
@@ -62,6 +64,7 @@ function CrearEquipo(req, res) {
                                     equipo.nombres = params.nombres;
                                     equipo.usuario = idUser;
                                     equipo.liga = idLiga;
+                                    equipo.imagen = null;
 
                                     //Guaradar los datos ingresados
                                     equipo.save((err, teamSaved) => {
@@ -210,10 +213,89 @@ function eliminarEquipo(req, res) {
 }
 
 
+// Eliminar archivo no apto para imagen
+function eliminarArchivo(res, rutaArchivo, mensaje) {
+
+    //Elimina el archivo no apto 
+    fs.unlink(rutaArchivo, (err) => {
+        return res.status(500).send({ mensaje: mensaje })
+    })
+}
+
+
+//  Subir imagen del equipo
+function subirImagen(req, res) {
+    var idEquipo = req.params.idEquipo
+
+    //Busqueda para ver si el equipo existe
+    Equipo.findOne({ _id: idEquipo }).exec((err, equipoEncontrado) => {
+        if (err) return res.status(500).send({ mensaje: "Error" });
+        if (!equipoEncontrado) return res.status(500).send({ mensaje: "El equipo no existe" })
+        var idUsuario = equipoEncontrado.usuario;
+
+        //Validar dueño del equipo
+        if (req.user.sub != idUsuario) {
+            return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
+        }
+
+        //Validar que se haya subido un archivo
+        if (req.files) {
+
+            //En esta variable se guardara la ruta de la imagen
+            var direccionArchivo = req.files.imagen.path;
+
+            //Se elimina las diagonales invertidas de la ruta
+            var direccion_split = direccionArchivo.split('\\');
+
+            //En esta variable se guarda el nombre del archivo
+            var nombre_archivo = direccion_split[3];
+
+            //En esta variable se separa el nombre del archivo de su extension  
+            var extension_archivo = nombre_archivo.split('.');
+
+            //Se guarda el nombre de la extension
+            var nombre_extension = extension_archivo[1].toLowerCase();
+
+            //Se valida que la extasion del archivo sea correcta
+            if (nombre_extension === 'png' || nombre_extension === 'jpg' || nombre_extension === 'gif') {
+
+                //Se sube la imagen del equipo
+                Equipo.findByIdAndUpdate(idEquipo, { imagen: nombre_archivo }, { new: true }, (err, usuarioEncontrado) => {
+                    return res.status(200).send({ usuarioEncontrado });
+                })
+            } else {
+
+                //Se elimina el archivo subido no permitido
+                return eliminarArchivo(res, direccionArchivo, 'Tipo de imagen no permitida');
+            }
+        } else {
+            return res.status(500).send({ mensaje: "No se ha subido ningun archivo" })
+        }
+    })
+}
+
+
+//  Obtener la imagen
+function obtenerImagen(req, res) {
+    var nombreImagen = req.params.imagen;
+    var rutaArchivo = `./src/imagenes/equipos/${nombreImagen}`;
+
+    //Funcion para obtener la imagen en archivo
+    fs.access(rutaArchivo, ((err) => {
+        if (err) {
+            return res.status(500).send({ mensaje: "No existe la imagen" });
+        } else {
+            return res.sendFile(path.resolve(rutaArchivo));
+        }
+    }))
+}
+
 module.exports = {
     CrearEquipo,
     BuscarEquipo,
     equiposLiga,
     editarEquipo,
-    eliminarEquipo
+    eliminarEquipo,
+    subirImagen,
+    obtenerImagen
 };
