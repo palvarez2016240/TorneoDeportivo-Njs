@@ -64,6 +64,11 @@ function CrearEquipo(req, res) {
                                     equipo.nombres = params.nombres;
                                     equipo.usuario = idUser;
                                     equipo.liga = idLiga;
+                                    equipo.golesAfavor = 0;
+                                    equipo.golesEncontra = 0;
+                                    equipo.diferenciaGoles = 0;
+                                    equipo.partidosJugados = 0;
+                                    equipo.pts = 0;
                                     equipo.imagen = null;
 
                                     //Guaradar los datos ingresados
