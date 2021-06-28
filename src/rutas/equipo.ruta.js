@@ -14,6 +14,6 @@ api.get("/equiposLiga/:idLiga", equipoControlador.equiposLiga);
 api.put("/editarEquipo/:idEquipo",md_autorizacion.ensureAuth, equipoControlador.editarEquipo);
 api.delete("/eliminarEquipo/:idEquipo", md_autorizacion.ensureAuth, equipoControlador.eliminarEquipo);
 api.post("/subirImagenEquipo/:idEquipo", [md_autorizacion.ensureAuth, md_subirImagen], equipoControlador.subirImagen);
-api.get("/obtenerImagen/:imagen", equipoControlador.obtenerImagen);
+api.get("/obtenerImagenEquipo/:imagen", equipoControlador.obtenerImagen);
 
 module.exports = api;
