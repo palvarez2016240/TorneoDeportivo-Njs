@@ -3,6 +3,8 @@
 var User = require('../modelos/usuario.model');
 var bcrypt = require('bcrypt-nodejs');
 var jwt = require('../services/jwt');
+var fs = require('fs');
+var path = require('path');
 
 function ADMIN(req, res) {
     //se crea el administrador predeterminado de la aplicación
@@ -207,6 +209,58 @@ function obtenerUsuarioID(req, res) {
     })
 }
 
+function EliminarArchivo(res, rutaArchivo, mensaje) {
+    fs.unlink(rutaArchivo, (err)=>{
+        return res.status(500).send({ mensaje: mensaje})
+    })
+}
+
+function SubirImagen(req, res) {
+    let UserId = req.user.sub;
+    if (req.files) {
+        var direccionArchivo = req.files.imagen.path;
+        console.log(direccionArchivo);
+
+        // documentos/imagenes/foto.png  →  ['documentos', 'imagenes', 'foto.png'] recorta la ruta o texto
+        var direccion_split = direccionArchivo.split('\\')
+        console.log(direccion_split);
+
+        // src\imagenes\usuarios\nombre_imagen.png ← Nombre del archivo
+        var nombre_archivo = direccion_split[3];
+        console.log(nombre_archivo);
+
+        //obtener la extención de archivo = .png || .jpg || .gif
+        var extension_archivo = nombre_archivo.split('.');
+        console.log(extension_archivo);
+
+        //obtener el nombre de esa extensión 
+        var nombre_extension = extension_archivo[1].toLowerCase();
+        console.log(nombre_extension);
+        //aqui solo guardara los archivos con estas extenciones 
+        if(nombre_extension === 'png' || nombre_extension === 'jpg' || nombre_extension === 'gif'){
+            User.findByIdAndUpdate(UserId, { imagen:  nombre_archivo}, {new: true} ,(err, usuarioEncontrado)=>{
+                return res.status(200).send({usuarioEncontrado});
+            })
+        }else{return eliminarArchivo(res, direccionArchivo, 'Extension, no permitida');
+        }
+    }
+}
+
+
+function obtenerImagen(req, res) {
+    var nombreImagen = req.params.imagen;
+    // se buscara el archivo con su nombre desde la ruta
+    var rutaArchivo = `./src/imagenes/usuarios/${nombreImagen}`;
+    fs.access(rutaArchivo, (err)=>{
+        if (err) {
+            return res.status(500).send({ mensaje: 'No existe esta la imagen' });
+        }else{
+            return res.sendFile(path.resolve(rutaArchivo));
+        }
+    })
+}
+
+
 
 module.exports = {
     ADMIN,
@@ -216,5 +270,8 @@ module.exports = {
     EditarUser,
     EliminarUser,
     ObtenerUser,
-    obtenerUsuarioID
+    obtenerUsuarioID,
+    EliminarArchivo,
+    SubirImagen,
+    obtenerImagen
 }
