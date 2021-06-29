@@ -10,21 +10,22 @@ var path = require('path');
 //  Buscar un equipo por su id
 function BuscarEquipo(req, res) {
 
+    var idEquipo = req.params.id
     //Se busca el equipo por su id
     Equipo.findOne({ _id: idEquipo }).exec((err, equipoEncontrado) => {
         if (err) return res.status(500).send({ mensaje: "Error en la solicitud" });
         if (!equipoEncontrado)
             return res.status(500).send({ mensaje: "El equipo no existe", });
-        if (equipoEncontrado) return res.status(500).send({ equipoEncontrado });
+        if (equipoEncontrado) return res.status(200).send({ equipoEncontrado });
     });
 }
 
 
 //  Registrar un equipo
 function CrearEquipo(req, res) {
-    let idUser = req.user.sub;
-    let equipo = new Equipo();
-    let params = req.body;
+    var idUser = req.user.sub;
+    var equipo = new Equipo();
+    var params = req.body;
     var idLiga = req.params.idLiga;
 
     //Se revisa parametros correctos
@@ -42,20 +43,21 @@ function CrearEquipo(req, res) {
             } else if (userFound) {
 
                 //Busqueda para ver si el equipo ya existe
-                Equipo.find({ $or: [{ nombres: params.nombres },] }).exec((err, equipoEncontrado) => {
-                    if (err) { return res.status(500).send({ mensaje: "Error" }) }
-                    if (equipoEncontrado && equipoEncontrado.length >= 1) {
+                Equipo.findOne({ nombres: params.nombres }).exec((err, equipoEncontrado) => {
+                    if (err) { return res.status(500).send({ mensaje: "Error 1" }) }
+                    
+                    if ( equipoEncontrado) {
                         return res.status(500).send({ mensaje: "El equipo ya existe" })
                     } else {
 
                         //Busqueda para ver si la liga existe
                         liga.findOne({ _id: idLiga }).exec((err, ligaEncontrada) => {
-                            if (err) return res.status(500).send({ mensaje: "Error" });
+                            if (err) return res.status(500).send({ mensaje: "Error 2" });
                             if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" });
 
                             //Validar que ni hayan mas de 10 equipos en la liga
                             Equipo.find({ liga: idLiga }).exec((err, equipoEncontrado) => {
-                                if (err) return res.status(500).send({ mensaje: "Error" });
+                                if (err) return res.status(500).send({ mensaje: "Error 3" });
                                 if (equipoEncontrado && equipoEncontrado.length >= 10) {
                                     return res.status(500).send({ mensaje: "Solo puede haber 10 equipos por liga" })
                                 } else {
@@ -77,7 +79,7 @@ function CrearEquipo(req, res) {
                                             return res.status(500).send({ ok: false, message: "Error general" });
                                         } else if
                                             (teamSaved) {
-                                            return res.status(500).send({ teamSaved });
+                                            return res.status(200).send({ teamSaved });
                                         }
                                     });
                                 }
@@ -91,7 +93,7 @@ function CrearEquipo(req, res) {
         });
 
     } else {
-        return res.status(500).send({ message: "Error" });
+        return res.status(500).send({ message: "Ingrese los parametros necesarios" });
     }
 }
 
@@ -126,7 +128,7 @@ function editarEquipo(req, res) {
 
     //Verificar si el equipo existe
     Equipo.findOne({ _id: idEquipo }).exec((err, equipoEncontrado) => {
-        if (err) return res.status(500).send({ mensaje: "Error" });
+        if (err) return res.status(500).send({ mensaje: "Error 1" });
         if (!equipoEncontrado) return res.status(500).send({ mensaje: "El equipo no existe" })
         idUsuario = equipoEncontrado.usuario;
         nombreAntiguo = equipoEncontrado.nombres;
@@ -162,30 +164,12 @@ function editarEquipo(req, res) {
         }
 
         //Verificar que no hayan mas de 10 equipos en la liga
-        Equipo.find({ liga: params.liga }).exec((err, equipoEncontrado) => {
-            if (err) return res.status(500).send({ mensaje: "Error" });
-            if (equipoEncontrado && equipoEncontrado.length >= 10) {
-                return res.status(500).send({ mensaje: "Solo puede haber 10 equipos por liga" })
-            } else {
-
-                //Validar si lo que desea editar es la liga
-                if (ligaAntigua != params.liga) {
-
-                    //Busqueda para ver si la liga existe
-                    liga.findOne({ nombres: params.liga }).exec((err, ligaEncontrada) => {
-                        if (err) return res.status(500).send({ mensaje: "Error" });
-                        if (ligaEncontrada && ligaEncontrada.length === 0) return res.status(500).send({ mensaje: "La liga no existe" })
-                    })
-                }
-
-                //Editar equipo
-                Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
-                    if (err) return res.status(500).send({ mensaje: "Error" });
-                    if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
-                    return res.status(200).send({ equipoActualizado })
-                })
-
-            }
+         //Editar equipo
+         
+         Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
+            if (err) return res.status(500).send({ mensaje: "Error al actualizar" });
+            if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
+            return res.status(200).send({ equipoActualizado })
         })
     })
 
@@ -212,7 +196,7 @@ function eliminarEquipo(req, res) {
         Equipo.findByIdAndDelete(idEquipo, (err, equipoEliminado) => {
             if (err) return res.status(500).send({ mensaje: "Error" });
             if (!equipoEliminado) return res.status(500).send({ mensaje: "No se ha podido eliminar el equipo" });
-            return res.status(200).send({ mensaje: "Equipo Eliminado" })
+            return res.status(200).send({ equipoEliminado })
         })
     })
 }
