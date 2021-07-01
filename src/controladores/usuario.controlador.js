@@ -15,7 +15,7 @@ function ADMIN(req, res) {
             console.log("El usuario ADMIN ya existe");
         } else {
             let User1 = new User();
-            bcrypt.hash("123", null, null, (err, passwordEncripado) => {
+            bcrypt.hash("deportes123", null, null, (err, passwordEncripado) => {
                 if (err) {
                     console.log("Error al encriptar la contraseña");
                 } else if (passwordEncripado) {
