@@ -8,7 +8,7 @@ var md_subirImagen = multiparty({ uploadDir: './src/imagenes/usuarios'});
 
 var api = express.Router();
 
-api.get("/login", usuarioControlador.Login);
+api.post("/login", usuarioControlador.Login);
 api.post('/NuevoAdmin',md_autorizacion.ensureAuth,usuarioControlador.NuevoAdmin);
 api.post('/registrar', usuarioControlador.Registrar);
 api.put('/EditarUser/:id', md_autorizacion.ensureAuth, usuarioControlador.EditarUser);
