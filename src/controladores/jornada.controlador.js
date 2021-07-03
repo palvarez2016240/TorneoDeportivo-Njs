@@ -16,51 +16,119 @@ function ingresarJornada(req, res) {
     if (req.user.rol != "ROL_USER") {
         return res.status(500).send({ mensaje: "No puede ingresar una jornada" })
     }
-    if (params.nombre && params.equipo1 && params.equipo2 && params.marcador1 && params.marcador2) {
+    if (params.nombre && params.equipo1 && params.equipo2 ) {
+
+        if(  !params.marcador2){
+
+            params.marcador2 = 0
+        }
+
+        if( !params.marcador1){
+            params.marcador1 = 0
+
+                
+        }
+
         jornadaM.nombre = params.nombre;
         jornadaM.liga = idLiga;
-        jornadaM.partido = {
+        jornadaM.partido = [{
             equipo1: params.equipo1,
             equipo2: params.equipo2,
             marcador1: params.marcador1,
             marcador2: params.marcador2
-        }
+        }]
         //---->Se busca en la base para ver si existen los nombres de los equipos
-        Equipo.findOne({ nombres: params.equipo1 }).exec((err, equipoEncontradoNombre) => {
+        Equipo.findOne({ _id: params.equipo1 }).exec((err, equipoEncontradoNombre) => {
             if (err) return res.status(500).send({ mensaje: "Error" })
             if (!equipoEncontradoNombre) return res.status(500).send({ mensaje: "No se encontro el mismo nombre de equipo" })
             if (equipoEncontradoNombre) {
-                Equipo.findOne({ nombres: params.equipo2 }).exec((err, equipoEncontradoNombre2) => {
+                Equipo.findOne({ _id: params.equipo2 }).exec((err, equipoEncontradoNombre2) => {
                     if (err) return res.status(500).send({ mensaje: "Error" })
                     if (!equipoEncontradoNombre2) return res.status(500).send({ mensaje: "No se encontro el mismo nombre de equipo 2" })
                     if (equipoEncontradoNombre2) {
+
+
+
                         //---->Validacion para que el mismo equipo no juegue en la misma jornada 2 veces
 
  
-                        Jornada.findOne({ nombre: params.nombre}).exec((err, JornadaEncontrada) => {
+                        Jornada.findOne({ nombre: params.nombre, liga: idLiga}).exec((err, JornadaEncontrada) => {
                                 if (err) return res.status(500).send({ mensaje: "Error en la peticion" })
                                 //console.log(JornadaEncontrada.partido.find(partido => partido.equipo1 === params.equipo1))
+                                if(params.equipo1 == params.equipo2) return res.status(500).send({ mensaje: "Un equipo no puede jugar contra si mismo " })
+                                
                                 if (JornadaEncontrada){
-                                    marcador=JornadaEncontrada.partido;
-                                    marcador.forEach(function(recorrer){
-                                        var jor = recorrer.jornada
-                                        console.log(jor)
-                                        
-                                    });
-                                    console.log(marcador)
 
-                                    jornada=JornadaEncontrada.nombre
-                                    console.log(jornada)
+
+
+                                    for (var i = 0; i < JornadaEncontrada.partido.length; i++){
+
+                                        console.log(JornadaEncontrada.partido[i].equipo1, params.equipo1)
+
+                                        if((String(JornadaEncontrada.partido[i].equipo1) == params.equipo1 || String(JornadaEncontrada.partido[i].equipo2) == params.equipo1)
+                                        ||
+                                        (String(JornadaEncontrada.partido[i].equipo1) == params.equipo2 || String(JornadaEncontrada.partido[i].equipo2) == params.equipo2)
+
+                                        
+                                        ){
+
+                                            var EquipoExisteEnJornada = 1
+                                        }
+
+                                    }
+
+                                    if(EquipoExisteEnJornada)    return res.status(500).send({ mensaje: "Uno de los dos partidos ya jugo " })
+
+
+
                                 }
 
-                                if (!JornadaEncontrada) {
+
+
+
+                                Jornada.find({liga : idLiga }).exec((err, JornadasEncontrada) => {
+
+
+                                    console.log(JornadasEncontrada)
+
+                                    //paso 1 recorremos las jornadas
+                                    for (var e = 0; e < JornadasEncontrada.length; e++){
+
+
+                                        //paso 2, recorremos los partidos de cada jornada
+                                        for (var i = 0; i < JornadasEncontrada[e].partido.length; i++){
+
+                                                                                        //ahora revisamos si hay partidos con los mismos equipos
+
+                                                                                            //primero buscamos el equipo 1, si existe, esto supongamos que dira sí
+                                        if((String( JornadasEncontrada[e].partido[i].equipo1) == params.equipo1 || String( JornadasEncontrada[e].partido[i].equipo2) == params.equipo1)
+                                        &&
+                                        // luego buscamos el partido 2, si existe supongamos que dira que sí
+                                        (String( JornadasEncontrada[e].partido[i].equipo1) == params.equipo2 || String( JornadasEncontrada[e].partido[i].equipo2) == params.equipo2)
+                                        ){
+
+                                            var EquipoExisteEnJornadas = 1
+                                        }
+
+
+
+
+                                    }
+                                }
+
+
+
+                                    if(EquipoExisteEnJornadas)    return res.status(500).send({ mensaje: "Los equipos ya se enfretaron " })
+
+
+
 
 
 
 
 
                                     ///---->Se guardan los datos del partido en el equipo 1 como golesfavor, DG , GE,etc
-                                    Equipo.find({ nombres: params.equipo1 }).exec((err, JequipoEncontrado) => {
+                                    Equipo.find({ _id: params.equipo1 }).exec((err, JequipoEncontrado) => {
                                         if (err) return res.status(500).send({ mensaje: "Error" })
                                         if (!JequipoEncontrado) return res.status(500).send({ mensaje: "No se encontro el equipo" })
                                         Equipo.update({ _id: JequipoEncontrado[0]._id }, {
@@ -100,7 +168,7 @@ function ingresarJornada(req, res) {
                                                 })
                                         }
                                         ///---->Se guardan los datos del partido en el equipo 2 como golesfavor, DG , GE,etc
-                                        Equipo.find({ nombres: params.equipo2 }).exec((err, JequipoEncontrado2) => {
+                                        Equipo.find({ _id: params.equipo2 }).exec((err, JequipoEncontrado2) => {
                                             if (err) return res.status(500).send({ mensaje: "Error" })
                                             if (!JequipoEncontrado2) return res.status(500).send({ mensaje: "No se encontro el equipo" })
                                             Equipo.update({ _id: JequipoEncontrado2[0]._id }, {
@@ -140,14 +208,44 @@ function ingresarJornada(req, res) {
                                             }
 
                                             //---->Se guarda en la base los datos agregados
-                                            jornadaM.save((err, jornadaGuadada) => {
-                                                if (err) return res.status(500).send({ mensaje: "Error" })
-                                                if (!jornadaGuadada) return res.status(500).send({ mensaje: "No se pudo Guardar la jornada" })
-                                                if (jornadaGuadada) return res.status(200).send({ jornadaGuadada })
-                                            })
+
+                                            if(JornadaEncontrada){
+                                                Jornada.findByIdAndUpdate(JornadaEncontrada._id, {$push:{partido:{
+
+                                                    
+                                                        equipo1: params.equipo1,
+                                                        equipo2: params.equipo2,
+                                                        marcador1: params.marcador1,
+                                                        marcador2: params.marcador2
+
+                                                }}},{new: true}).exec((err, partidoGuardado)=>{
+
+                                                    if (partidoGuardado) return res.status(200).send({ partidoGuardado })
+                                                    if (err) return res.status(500).send({ mensaje: "Error" })
+                                                    if (!jornadaGuadada) return res.status(500).send({ mensaje: "No se pudo Guardar la jornada" })
+                                                })
+
+
+
+                                            }else{
+                                                jornadaM.save((err, jornadaGuadada) => {
+                                                    if (err) return res.status(500).send({ mensaje: "Error" })
+                                                    if (!jornadaGuadada) return res.status(500).send({ mensaje: "No se pudo Guardar la jornada" })
+                                                    if (jornadaGuadada) return res.status(200).send({ jornadaGuadada })
+                                                })
+
+                                            }
+
+
                                         })
                                     })
-                                }
+
+
+                                })
+
+                                
+
+                                
                             })
                     }
                 })
@@ -162,8 +260,6 @@ function ingresarJornada(req, res) {
 
 
 }
-
-
 
 
 module.exports = {
