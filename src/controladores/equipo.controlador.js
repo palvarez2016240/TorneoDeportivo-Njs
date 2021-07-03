@@ -37,13 +37,13 @@ function CrearEquipo(req, res) {
         }
 
         //Se busca al usuario si existe
-        User.findOne({ _id: idUser }, (err, userFound) => {
+        User.findOne({ _id: idUser}, (err, userFound) => {
             if (err) {
                 return res.status(500).send({ ok: false, message: "Error general" });
             } else if (userFound) {
 
                 //Busqueda para ver si el equipo ya existe
-                Equipo.findOne({ nombres: params.nombres }).exec((err, equipoEncontrado) => {
+                Equipo.findOne({ nombres: params.nombres, liga: idLiga }).exec((err, equipoEncontrado) => {
                     if (err) { return res.status(500).send({ mensaje: "Error 1" }) }
                     
                     if ( equipoEncontrado) {
@@ -153,7 +153,7 @@ function editarEquipo(req, res) {
             //Verificar que el nuevo nombre no exista
             Equipo.find({
                 $or: [
-                    { nombres: params.nombres },
+                    { nombres: params.nombres,  liga: ligaAntigua,usuario: req.user.sub },
                 ]
             }).exec((err, encontrados) => {
                 if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
