@@ -279,6 +279,29 @@ function obtenerImagen(req, res) {
     }))
 }
 
+
+
+
+function tabla(req, res) {
+    var idLiga = req.params.idLiga
+
+    if (req.user.rol != "ROL_USER") {
+        return res.status(500).send({ mensaje: "No puede ingresar una jornada" })
+    }
+    
+    Equipo.find({
+        liga: idLiga,
+        pts: { $gt: -1 }
+
+    }).sort({ pts: -1 }).limit(10).exec((err, tablaDeEquipos) => {
+        if (err) return res.status(500).send({ message: "Error en la peticion" })
+        if (!tablaDeEquipos) return res.status(500).send({ mensaje: "No se pudo encontrar los equipos" })
+        if (tablaDeEquipos) return res.status(200).send({ tablaDeEquipos })
+    })
+
+}
+
+
 module.exports = {
     CrearEquipo,
     BuscarEquipo,
@@ -286,5 +309,6 @@ module.exports = {
     editarEquipo,
     eliminarEquipo,
     subirImagen,
-    obtenerImagen
+    obtenerImagen,
+    tabla
 };
