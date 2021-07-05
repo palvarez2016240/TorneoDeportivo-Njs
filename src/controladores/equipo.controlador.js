@@ -31,22 +31,17 @@ function CrearEquipo(req, res) {
     //Se revisa parametros correctos
     if (params.nombres) {
 
-        //Validar que el que pide la solictud sea rol usuario
-        if (req.user.rol != 'ROL_USER') {
-            return res.status(500).send({ mensaje: "Solo el usuario puede agregar un equipo" })
-        }
-
         //Se busca al usuario si existe
-        User.findOne({ _id: idUser}, (err, userFound) => {
+        User.findOne({ _id: idUser }, (err, userFound) => {
             if (err) {
                 return res.status(500).send({ ok: false, message: "Error general" });
             } else if (userFound) {
 
                 //Busqueda para ver si el equipo ya existe
-                Equipo.findOne({ nombres: params.nombres, liga: idLiga }).exec((err, equipoEncontrado) => {
+                Equipo.findOne({ nombres: params.nombres, liga: idLiga}).exec((err, equipoEncontrado) => {
                     if (err) { return res.status(500).send({ mensaje: "Error 1" }) }
-                    
-                    if ( equipoEncontrado) {
+
+                    if (equipoEncontrado) {
                         return res.status(500).send({ mensaje: "El equipo ya existe" })
                     } else {
 
@@ -151,26 +146,33 @@ function editarEquipo(req, res) {
         if (nombreAntiguo != params.nombres) {
 
             //Verificar que el nuevo nombre no exista
-            Equipo.find({
-                $or: [
-                    { nombres: params.nombres,  liga: ligaAntigua,usuario: req.user.sub },
-                ]
-            }).exec((err, encontrados) => {
+            Equipo.findOne(
+                { nombres: params.nombres, liga: ligaAntigua/*, usuario: req.user.sub */},
+            ).exec((err, encontrados) => {
+                console.log(encontrados, params.nombres, nombreAntiguo, ligaAntigua)
                 if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
-                if (encontrados && encontrados.length >= 1) {
-                    return res.status(500).send({ mensaje: "El equipo ya existe" });
+                if (encontrados) {
+                    return res.status(500).send({ mensaje: "El equipo ya existe" })
+                }else{
+                    Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
+                        if (err) return res.status(500).send({ mensaje: "Error al actualizar" });
+                        if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
+                        return res.status(200).send({ equipoActualizado })
+                    })
                 }
             })
+        }else{
+            Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
+                if (err) return res.status(500).send({ mensaje: "Error al actualizar" });
+                if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
+                return res.status(200).send({ equipoActualizado })
+            })
         }
-
+        
         //Verificar que no hayan mas de 10 equipos en la liga
-         //Editar equipo
-         
-         Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
-            if (err) return res.status(500).send({ mensaje: "Error al actualizar" });
-            if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
-            return res.status(200).send({ equipoActualizado })
-        })
+        //Editar equipo
+
+        
     })
 
 }
@@ -284,10 +286,6 @@ function obtenerImagen(req, res) {
 
 function tabla(req, res) {
     var idLiga = req.params.idLiga
-
-    if (req.user.rol != "ROL_USER") {
-        return res.status(500).send({ mensaje: "No puede ingresar una jornada" })
-    }
     
     Equipo.find({
         liga: idLiga,

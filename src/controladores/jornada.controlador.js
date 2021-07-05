@@ -5,7 +5,6 @@ var Equipo = require("../modelos/equipos.model");
 var liga = require("../modelos/liga.model");
 var Jornada = require("../modelos/jornada.model");
 
-
 function ingresarJornada(req, res) {
     var jornadaM = new Jornada();
     var params = req.body
@@ -13,9 +12,6 @@ function ingresarJornada(req, res) {
     var marcador
     var jornada
     //---->Solo el rol usuario puede hacer esta funcion, ademas de agregar los datos(postman) al modelo antes de subirlo a la base
-    if (req.user.rol != "ROL_USER") {
-        return res.status(500).send({ mensaje: "No puede ingresar una jornada" })
-    }
     if (params.nombre && params.equipo1 && params.equipo2 ) {
 
         if(  !params.marcador2){
@@ -63,7 +59,6 @@ function ingresarJornada(req, res) {
 
                                     for (var i = 0; i < JornadaEncontrada.partido.length; i++){
 
-                                        console.log(JornadaEncontrada.partido[i].equipo1, params.equipo1)
 
                                         if((String(JornadaEncontrada.partido[i].equipo1) == params.equipo1 || String(JornadaEncontrada.partido[i].equipo2) == params.equipo1)
                                         ||
@@ -88,8 +83,6 @@ function ingresarJornada(req, res) {
 
                                 Jornada.find({liga : idLiga }).exec((err, JornadasEncontrada) => {
 
-
-                                    console.log(JornadasEncontrada)
 
                                     //paso 1 recorremos las jornadas
                                     for (var e = 0; e < JornadasEncontrada.length; e++){
@@ -143,7 +136,6 @@ function ingresarJornada(req, res) {
                                             (err, equipoCambiado) => {
                                                 if (err) return res.status(500).send({ mensaje: "Error en la peticion de cambiar Equipo +" })
                                                 if (!equipoCambiado) return res.status(500).send({ mensaje: "No se pudo cambiar los Equipo +" })
-                                                console.log('ya hiso el cambio, eso espero XD')
                                             })
                                         ///---->Se guardan los pts equipo1 si gano +3 o si == +1
                                         if (params.marcador1 > params.marcador2) {

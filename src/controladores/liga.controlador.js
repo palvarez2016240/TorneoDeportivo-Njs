@@ -16,11 +16,6 @@ function CrearLiga(req, res) {
     //Validar datos ingresados
     if (params.nombres && idUser) {
 
-        //Validar que el que pide la solictud sea rol usuario
-        if (req.user.rol != 'ROL_USER') {
-            return res.status(500).send({ mensaje: "Solo el usuario puede agregar una liga" })
-        }
-
         //Buscar el id del usuario que hace la peticion (No se para que)
         User.findOne({ _id: idUser }, (err, userFound) => {
             if (err) {
@@ -28,11 +23,9 @@ function CrearLiga(req, res) {
             } else if (userFound) {
 
                 //Ver si el nombre de la liga existe
-                Liga.find({
-                    $or: [
-                        { nombres: params.nombres }
-                    ]
-                }).exec((err, ligaEncontrada) => {
+                Liga.find(
+                    { nombres: params.nombres, usuario: idUser }
+                ).exec((err, ligaEncontrada) => {
                     if (err) return res.status(500).send({ mensaje: "Error" });
                     if (ligaEncontrada && ligaEncontrada.length >= 1) {
                         return res.status(500).send({ mensaje: "La liga ya existe" });
@@ -80,7 +73,7 @@ function EditarLiga(req, res) {
 
     //Busqueda para ver si el nombre ya existe
     Liga.find({
-        nombres: params.nombres,
+        nombres: params.nombres, usuario: req.user.sub
     }).exec((err, LigaEncontrada) => {
         if (err) return res.status(500).send({ mensaje: "Error" });
         if (LigaEncontrada.length >= 1) {
@@ -94,7 +87,7 @@ function EditarLiga(req, res) {
                 var idUsuario = ligaEncontrada.usuario;
 
                 //Validar rol
-                if (req.user.sub != idUsuario) {
+                if (req.user.sub != idUsuario && req.user.rol != 'ROL_ADMINAPP') {
                     return res.status(500).send({ mensaje: "Esta liga no te pertenece" })
                 }
 
@@ -121,7 +114,7 @@ function EliminarLiga(req, res) {
 
     //Eliminar el parametro de usuario
     delete params.usuario;
-    
+
     //Buscar si la liga existe
     Liga.findOne({ _id: LigaId }).exec((err, ligaEncontrada) => {
         if (err) return res.status(500).send({ mensaje: "Error" });
@@ -153,12 +146,26 @@ function EliminarLiga(req, res) {
 function ObterLigas(req, res) {
     var idUsuario = req.user.sub;
 
-    //Busqueda de las ligas que le pertence al usuario
-    Liga.find({ usuario: idUsuario }).exec((err, ligaEncontrada)=> {
-        if (err) return res.status(500).send({ mensaje: "Error en la petición de Ligas" });
-        if (ligaEncontrada.length === 0) return res.status(500).send({ mensaje: 'No existen las ligas' });
-        return res.status(200).send({ ligaEncontrada })
-    })
+    if (req.user.rol === 'ROL_ADMINAPP') {
+
+        Liga.find().exec((err, ligaEncontrada) => {
+
+            User.populate(ligaEncontrada, { path: "usuario" }, ((err, ligaEncontrada) => {
+                if (err) return res.status(500).send({ mensaje: "Error en la petición de Ligas" });
+                if (ligaEncontrada.length === 0) return res.status(500).send({ mensaje: 'No existen las ligas' });
+                return res.status(200).send({ ligaEncontrada })
+            }))
+        })
+    } else {
+
+        //Busqueda de las ligas que le pertence al usuario
+        Liga.find({ usuario: idUsuario }).exec((err, ligaEncontrada) => {
+            if (err) return res.status(500).send({ mensaje: "Error en la petición de Ligas" });
+            if (ligaEncontrada.length === 0) return res.status(500).send({ mensaje: 'No existen las ligas' });
+            return res.status(200).send({ ligaEncontrada })
+        })
+    }
+
 }
 
 
@@ -175,7 +182,7 @@ function ligaId(req, res) {
         usuarioCorrecto = ligaEncontrada.usuario;
 
         // Un if para ver si la liga le pertenece
-        if (idUsuario != usuarioCorrecto) {
+        if (idUsuario != usuarioCorrecto && req.user.rol != 'ROL_ADMINAPP') {
             return res.status(500).send({ mensaje: "Esta liga no le pertenece" });
         }
 

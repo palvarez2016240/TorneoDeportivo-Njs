@@ -23,6 +23,7 @@ function ADMIN(req, res) {
                     User1.email = "admin@gmail.com"
                     User1.password = passwordEncripado;
                     User1.rol = "ROL_ADMINAPP";
+                    User1.imagen = null;
                     User1.save((err, usuarioGuardado) => {
                         if (err) {
                             console.log("Error al crear el ADMIN");
@@ -82,6 +83,7 @@ function NuevoAdmin(req, res) {
     if (params.usuario && params.password) {
         User2.usuario = params.usuario;
         User2.rol = "ROL_ADMINAPP"
+        User2.imagen = null;
         User.find(
             { usuario: User2.usuario }
         ).exec((err, userEncontrados) => {
@@ -159,7 +161,7 @@ function EditarUser(req, res) {
         email: params.email,
     }).exec((err, UserEncontrado) => {
         if (err) return res.status(500).send({ mensaje: "Error en la solicitud de Usuario" });
-        if (UserEncontrado.length >= 1) {
+        if (UserEncontrado.length >= 1 && !params.rol) {
             return res.status(500).send({ mensaje: "Lo que desea modificar ya lo ha estado" })
         } else {
             User.findOne({ _id: UserId }).exec((err, userEncontrado) => {
@@ -219,23 +221,18 @@ function SubirImagen(req, res) {
     let UserId = req.user.sub;
     if (req.files) {
         var direccionArchivo = req.files.imagen.path;
-        console.log(direccionArchivo);
 
         // documentos/imagenes/foto.png  →  ['documentos', 'imagenes', 'foto.png'] recorta la ruta o texto
         var direccion_split = direccionArchivo.split('\\')
-        console.log(direccion_split);
 
         // src\imagenes\usuarios\nombre_imagen.png ← Nombre del archivo
         var nombre_archivo = direccion_split[3];
-        console.log(nombre_archivo);
 
         //obtener la extención de archivo = .png || .jpg || .gif
         var extension_archivo = nombre_archivo.split('.');
-        console.log(extension_archivo);
 
         //obtener el nombre de esa extensión 
         var nombre_extension = extension_archivo[1].toLowerCase();
-        console.log(nombre_extension);
         //aqui solo guardara los archivos con estas extenciones 
         if(nombre_extension === 'png' || nombre_extension === 'jpg' || nombre_extension === 'gif'){
             User.findByIdAndUpdate(UserId, { imagen:  nombre_archivo}, {new: true} ,(err, usuarioEncontrado)=>{
