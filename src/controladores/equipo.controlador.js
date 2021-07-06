@@ -322,9 +322,22 @@ function llamarPDF(req, res) {
         pts: { $gt: -1 }
 
     }).sort({ pts: -1 }).limit(10).exec((err, tablaDeEquipos) => {
-        if (err) return res.status(500).send({ message: "Error en la peticion" })
-        if (!tablaDeEquipos) return res.status(500).send({ mensaje: "No se pudo encontrar los equipos" })
-        generarPDF(tablaDeEquipos)
+
+        User.populate(tablaDeEquipos, { path: "usuario" }, ((err, tablaDeEquipos) => {
+            //liga
+            liga.populate(tablaDeEquipos, { path: "liga" }, ((err, tablaDeEquipos) => {
+                //liga
+    
+                if (err) return res.status(500).send({ message: "Error en la peticion" })
+                if (!tablaDeEquipos) return res.status(500).send({ mensaje: "No se pudo encontrar los equipos" })
+                console.log(tablaDeEquipos[0])
+                generarPDF(tablaDeEquipos)
+            }))
+    
+
+        }))
+
+
     })
 }
 
@@ -338,7 +351,7 @@ function generarPDF(invoice) {
     generateFooter(doc);
 
     doc.end();
-    doc.pipe(fs.createWriteStream(`./src/PDF/Documento.pdf`));
+    doc.pipe(fs.createWriteStream(`../TorneoDeportivo.Ang/src/assets/TablaEstadisticas.pdf`));
 }
 
 function generateHeader(doc) {
@@ -367,15 +380,13 @@ function generateFooter(doc) {
 function generateCustomerInformation(doc, invoice) {
     const shipping = invoice.shipping;
 
-    /*doc
-        .text(`Tabla: Hola Mundo`, 50, 200)
-        .text(`Invoice Date: ${new Date()}`, 50, 215)
-        .text(`Balance Due: ${invoice.subtotal - invoice.paid}`, 50, 130)
-    
-        .text(shipping.name, 300, 200)
-        .text(shipping.address, 300, 215)
-        .text(`${shipping.city}, ${shipping.state}, ${shipping.country}`, 300, 130)
-        .moveDown();*/
+    doc
+        .text("Liga:"+invoice[0].liga.nombres, 50, 95)
+
+        .text("Nombre:"+invoice[0].usuario.usuario, 50, 130)
+        .text("Email:"+invoice[0].usuario.email, 50, 145)
+        .text("Usuario:"+invoice[0].usuario.usuario, 50, 160)
+        .moveDown();
 }
 
 function generateInvoiceTable(doc, invoice) {
@@ -386,12 +397,14 @@ function generateInvoiceTable(doc, invoice) {
     generateTableRow(
         doc,
         invoiceTableTop,
-        "Item",
-        "Description",
-        "Unit Cost",
-        "Quantity",
-        "Line Total"
+        "Equipo",
+        "GF",
+        "GC",
+        "DG",
+        "Puntos",
+        1
     );
+
     generateHr(doc, invoiceTableTop + 20);
     doc.font("Helvetica");
 
@@ -419,49 +432,22 @@ function generateInvoiceTable(doc, invoice) {
             item.golesAfavor,
             item.golesEncontra,
             item.diferenciaGoles,
-            item.partidosJugados,
-            item.imagen,
             item.pts,
+            item.imagen,
         );
 
         generateHr(doc, position + 20);
     }
 
-    const subtotalPosition = invoiceTableTop + (i + 1) * 30;
-    generateTableRow(
-        doc,
-        subtotalPosition,
-        "",
-        "",
-        "Subtotal",
-        "",
-        1
-    );
+    const subtotalPosition = invoiceTableTop + (i + 1) * 40;
+
 
     const paidToDatePosition = subtotalPosition + 20;
-    generateTableRow(
-        doc,
-        paidToDatePosition,
-        "",
-        "",
-        "Paid To Date",
-        "",
-        1
-    );
+
 
     const duePosition = paidToDatePosition + 25;
     doc.font("Helvetica-Bold");
-    generateTableRow(
-        doc,
-        duePosition,
-        "",
-        "",
-        "Balance Due",
-        "",
-        "",
-        1,
 
-    );
     doc.font("Helvetica");
 }
 
@@ -475,20 +461,39 @@ function generateTableRow(
     lineTotal,
     imagen
 ) {
-    console.log(description)
-    if (item.imagen != null) {
-        var imagen = 'imagenes/equipos/' + item.imagen
-    } else {
+    console.log(imagen)
+    if (item.imagen === null) {
         var imagen = 'imagenes/equipos/sin_logo.png'
-    }
-    doc
 
-        .image("./src/" + imagen, 50, y, { width: 30 })
+    } 
+
+
+    if(imagen != 1){
+            var imagen = 'imagenes/equipos/' + imagen
+
+        }
+
+
+    
+    if(imagen === 1){
+        doc
+
         .text(item, 100, y)
         .text(description, 200, y)
         .text(unitCost, 250, y, { width: 90, align: "right" })
         .text(quantity, 300, y, { width: 90, align: "right" })
-        .text(lineTotal, 0, y, { align: "right" });
+        .text(lineTotal, 400, y, { width: 90, align: "right"});   
+    }else{
+        doc
+
+        .image("./src/" + imagen, 50, y, { width: 11 })
+        .text(item, 100, y)
+        .text(description, 200, y)
+        .text(unitCost, 250, y, { width: 90, align: "right" })
+        .text(quantity, 300, y, { width: 90, align: "right" })
+        .text(lineTotal, 400, y, { width: 90, align: "right"});   
+    }
+
 }
 
 function generateHr(doc, y) {
