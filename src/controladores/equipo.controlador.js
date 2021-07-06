@@ -5,6 +5,7 @@ var Equipo = require("../modelos/equipos.model");
 var liga = require("../modelos/liga.model");
 var fs = require('fs');
 var path = require('path');
+const PDFDocument = require("pdfkit");
 
 
 //  Buscar un equipo por su id
@@ -38,7 +39,7 @@ function CrearEquipo(req, res) {
             } else if (userFound) {
 
                 //Busqueda para ver si el equipo ya existe
-                Equipo.findOne({ nombres: params.nombres, liga: idLiga}).exec((err, equipoEncontrado) => {
+                Equipo.findOne({ nombres: params.nombres, liga: idLiga }).exec((err, equipoEncontrado) => {
                     if (err) { return res.status(500).send({ mensaje: "Error 1" }) }
 
                     if (equipoEncontrado) {
@@ -147,13 +148,13 @@ function editarEquipo(req, res) {
 
             //Verificar que el nuevo nombre no exista
             Equipo.findOne(
-                { nombres: params.nombres, liga: ligaAntigua/*, usuario: req.user.sub */},
+                { nombres: params.nombres, liga: ligaAntigua/*, usuario: req.user.sub */ },
             ).exec((err, encontrados) => {
                 console.log(encontrados, params.nombres, nombreAntiguo, ligaAntigua)
                 if (err) return res.status(500).send({ mensaje: "Error en la peticion" });
                 if (encontrados) {
                     return res.status(500).send({ mensaje: "El equipo ya existe" })
-                }else{
+                } else {
                     Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
                         if (err) return res.status(500).send({ mensaje: "Error al actualizar" });
                         if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
@@ -161,18 +162,18 @@ function editarEquipo(req, res) {
                     })
                 }
             })
-        }else{
+        } else {
             Equipo.findByIdAndUpdate(idEquipo, params, { new: true }, (err, equipoActualizado) => {
                 if (err) return res.status(500).send({ mensaje: "Error al actualizar" });
                 if (!equipoActualizado) return res.status(500).send({ mensaje: "No se ha podido editar el equipo" })
                 return res.status(200).send({ equipoActualizado })
             })
         }
-        
+
         //Verificar que no hayan mas de 10 equipos en la liga
         //Editar equipo
 
-        
+
     })
 
 }
@@ -286,7 +287,7 @@ function obtenerImagen(req, res) {
 
 function tabla(req, res) {
     var idLiga = req.params.idLiga
-    
+
     Equipo.find({
         liga: idLiga,
         pts: { $gt: -1 }
@@ -300,6 +301,206 @@ function tabla(req, res) {
 }
 
 
+function tablaPDF(idLiga, res) {
+    var idLiga = idLiga
+
+    Equipo.find({
+        liga: idLiga,
+        pts: { $gt: -1 }
+
+    }).sort({ pts: -1 }).limit(10).exec((err, tablaDeEquipos) => {
+        return { tablaDeEquipos }
+    })
+
+}
+
+function llamarPDF(req, res) {
+    var idLiga = req.params.idLiga
+
+    Equipo.find({
+        liga: idLiga,
+        pts: { $gt: -1 }
+
+    }).sort({ pts: -1 }).limit(10).exec((err, tablaDeEquipos) => {
+        if (err) return res.status(500).send({ message: "Error en la peticion" })
+        if (!tablaDeEquipos) return res.status(500).send({ mensaje: "No se pudo encontrar los equipos" })
+        generarPDF(tablaDeEquipos)
+    })
+}
+
+//Funciones para crear un PDF
+function generarPDF(invoice) {
+    let doc = new PDFDocument({ margin: 50 });
+
+    generateHeader(doc);
+    generateCustomerInformation(doc, invoice);
+    generateInvoiceTable(doc, invoice);
+    generateFooter(doc);
+
+    doc.end();
+    doc.pipe(fs.createWriteStream(`./src/PDF/Documento.pdf`));
+}
+
+function generateHeader(doc) {
+    doc
+        .image("./src/PDF/a.png", 50, 45, { width: 50 })
+        .fillColor("#444444")
+        .fontSize(20)
+        .text("My Tournament", 110, 57)
+        .fontSize(10)
+        .text("KINAL - Grupo 4", 200, 65, { align: "right" })
+        .moveDown();
+}
+
+function generateFooter(doc) {
+    doc
+        .fontSize(10)
+        .text(
+            "MyTournament 2021©",
+            50,
+            780,
+            { align: "center", width: 500 }
+        );
+}
+
+
+function generateCustomerInformation(doc, invoice) {
+    const shipping = invoice.shipping;
+
+    /*doc
+        .text(`Tabla: Hola Mundo`, 50, 200)
+        .text(`Invoice Date: ${new Date()}`, 50, 215)
+        .text(`Balance Due: ${invoice.subtotal - invoice.paid}`, 50, 130)
+    
+        .text(shipping.name, 300, 200)
+        .text(shipping.address, 300, 215)
+        .text(`${shipping.city}, ${shipping.state}, ${shipping.country}`, 300, 130)
+        .moveDown();*/
+}
+
+function generateInvoiceTable(doc, invoice) {
+    let i;
+    const invoiceTableTop = 330;
+
+    doc.font("Helvetica-Bold");
+    generateTableRow(
+        doc,
+        invoiceTableTop,
+        "Item",
+        "Description",
+        "Unit Cost",
+        "Quantity",
+        "Line Total"
+    );
+    generateHr(doc, invoiceTableTop + 20);
+    doc.font("Helvetica");
+
+    /*nombres: String,
+    golesAfavor: Number,
+    golesEncontra: Number,
+    diferenciaGoles: Number,
+    partidosJugados: Number,
+    pts: Number,
+    imagen: String,
+    usuario: { type:Schema.Types.ObjectId, ref: "usuario"},
+    liga: {type: Schema.Types.ObjectId, ref: "liga"}*/
+
+
+    for (i = 0; i < invoice.length; i++) {
+
+        const item = invoice[i];
+        const position = invoiceTableTop + (i + 1) * 30;
+
+        generateTableRow(
+            doc,
+            //doc.image("./src/" + imagen,{ width: 30 }), 
+            position,
+            item.nombres,
+            item.golesAfavor,
+            item.golesEncontra,
+            item.diferenciaGoles,
+            item.partidosJugados,
+            item.imagen,
+            item.pts,
+        );
+
+        generateHr(doc, position + 20);
+    }
+
+    const subtotalPosition = invoiceTableTop + (i + 1) * 30;
+    generateTableRow(
+        doc,
+        subtotalPosition,
+        "",
+        "",
+        "Subtotal",
+        "",
+        1
+    );
+
+    const paidToDatePosition = subtotalPosition + 20;
+    generateTableRow(
+        doc,
+        paidToDatePosition,
+        "",
+        "",
+        "Paid To Date",
+        "",
+        1
+    );
+
+    const duePosition = paidToDatePosition + 25;
+    doc.font("Helvetica-Bold");
+    generateTableRow(
+        doc,
+        duePosition,
+        "",
+        "",
+        "Balance Due",
+        "",
+        "",
+        1,
+
+    );
+    doc.font("Helvetica");
+}
+
+function generateTableRow(
+    doc,
+    y,
+    item,
+    description,
+    unitCost,
+    quantity,
+    lineTotal,
+    imagen
+) {
+    console.log(description)
+    if (item.imagen != null) {
+        var imagen = 'imagenes/equipos/' + item.imagen
+    } else {
+        var imagen = 'imagenes/equipos/sin_logo.png'
+    }
+    doc
+
+        .image("./src/" + imagen, 50, y, { width: 30 })
+        .text(item, 100, y)
+        .text(description, 200, y)
+        .text(unitCost, 250, y, { width: 90, align: "right" })
+        .text(quantity, 300, y, { width: 90, align: "right" })
+        .text(lineTotal, 0, y, { align: "right" });
+}
+
+function generateHr(doc, y) {
+    doc
+        .strokeColor("#aaaaaa")
+        .lineWidth(1)
+        .moveTo(50, y)
+        .lineTo(550, y)
+        .stroke();
+}
+
+
 module.exports = {
     CrearEquipo,
     BuscarEquipo,
@@ -308,5 +509,7 @@ module.exports = {
     eliminarEquipo,
     subirImagen,
     obtenerImagen,
-    tabla
+    tabla,
+    generarPDF,
+    llamarPDF
 };
