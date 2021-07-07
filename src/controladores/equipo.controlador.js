@@ -332,6 +332,9 @@ function llamarPDF(req, res) {
                 if (!tablaDeEquipos) return res.status(500).send({ mensaje: "No se pudo encontrar los equipos" })
                 console.log(tablaDeEquipos[0])
                 generarPDF(tablaDeEquipos)
+
+                return res.status(200).send({tablaDeEquipos})
+
             }))
     
 
@@ -462,17 +465,21 @@ function generateTableRow(
     imagen
 ) {
     console.log(imagen)
-    if (item.imagen === null) {
+
+
+    if (imagen == null) {
         var imagen = 'imagenes/equipos/sin_logo.png'
+        var vacio = 1
 
     } 
 
 
-    if(imagen != 1){
+    if(imagen != 1 && vacio != 1){
             var imagen = 'imagenes/equipos/' + imagen
 
         }
 
+        console.log(imagen)
 
     
     if(imagen === 1){

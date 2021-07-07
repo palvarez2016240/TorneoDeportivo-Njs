@@ -17,6 +17,6 @@ api.post("/subirImagenEquipo/:idEquipo", [md_autorizacion.ensureAuth, md_subirIm
 api.get("/obtenerImagenEquipo/:imagen", equipoControlador.obtenerImagen);
 api.get("/tabla/:idLiga", equipoControlador.tabla);
 api.get("/pdf", equipoControlador.generarPDF);
-api.get("/llamarPDF/:idLiga", equipoControlador.llamarPDF)
+api.get("/llamarPDF/:idLiga",md_autorizacion.ensureAuth, equipoControlador.llamarPDF)
 
 module.exports = api;
