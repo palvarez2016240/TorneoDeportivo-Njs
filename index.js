@@ -9,7 +9,7 @@ mongoose.connect('mongodb+srv://admin:admin@dbtorneodeportivo.ors0h.mongodb.net/
     
     Admin.ADMIN();
     
-    app.listen(process.env.Port || 3000,function(){
+    app.listen(process.env.PORT || 3000,function(){
         console.log('El servidor esta funcionando en el puerto 3000')
     })    
 
