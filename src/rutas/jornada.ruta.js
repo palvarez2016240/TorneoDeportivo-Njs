@@ -2,7 +2,7 @@
 
 var express = require("express");
 var jornadaontrolador = require("../controladores/jornada.controlador");
-var md_autorizacion = require("../middlewares/authenticated");
+var md_autorizacion = require("../Middlewares/authenticated");
 
 var api = express.Router();
 

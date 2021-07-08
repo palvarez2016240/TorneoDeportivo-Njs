@@ -2,7 +2,7 @@
 
 var express = require("express");
 var ligaControlador = require("../controladores/liga.controlador");
-var md_autorizacion = require("../middlewares/authenticated");
+var md_autorizacion = require("../Middlewares/authenticated");
 var multiparty = require('connect-multiparty');
 var md_subirImagen = multiparty({uploadDir: './src/imagenes/ligas'});
 
