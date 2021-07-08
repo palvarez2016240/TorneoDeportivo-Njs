@@ -214,41 +214,43 @@ function subirImagen(req, res) {
         //Validar dueño del equipo
         if (req.user.sub != idUsuario && req.user.rol != 'ROL_ADMINAPP') {
             return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
+        } else {
+            if (req.files) {
+
+                //En esta variable se guardara la ruta de la imagen
+                var direccionArchivo = req.files.imagen.path;
+
+                //Se elimina las diagonales invertidas de la ruta
+                var direccion_split = direccionArchivo.split('\\');
+
+                //En esta variable se guarda el nombre del archivo
+                var nombre_archivo = direccion_split[3];
+
+                //En esta variable se separa el nombre del archivo de su extension  
+                var extension_archivo = nombre_archivo.split('.');
+
+                //Se guarda el nombre de la extension
+                var nombre_extension = extension_archivo[1].toLowerCase();
+
+                //Se valida que la extasion del archivo sea correcta
+                if (nombre_extension === 'png' || nombre_extension === 'jpg' || nombre_extension === 'gif') {
+
+                    //Se sube la imagen del equipo
+                    Liga.findByIdAndUpdate(idLiga, { imagen: nombre_archivo }, { new: true }, (err, ligaEditada) => {
+                        return res.status(200).send({ ligaEditada });
+                    })
+                } else {
+
+                    //Se elimina el archivo subido no permitido
+                    return eliminarArchivo(res, direccionArchivo, 'Tipo de imagen no permitida');
+                }
+            } else {
+                return res.status(500).send({ mensaje: "No se ha subido ningun archivo" })
+            }
         }
 
         //Validar que se haya subido un archivo
-        if (req.files) {
 
-            //En esta variable se guardara la ruta de la imagen
-            var direccionArchivo = req.files.imagen.path;
-
-            //Se elimina las diagonales invertidas de la ruta
-            var direccion_split = direccionArchivo.split('\\');
-
-            //En esta variable se guarda el nombre del archivo
-            var nombre_archivo = direccion_split[3];
-
-            //En esta variable se separa el nombre del archivo de su extension  
-            var extension_archivo = nombre_archivo.split('.');
-
-            //Se guarda el nombre de la extension
-            var nombre_extension = extension_archivo[1].toLowerCase();
-
-            //Se valida que la extasion del archivo sea correcta
-            if (nombre_extension === 'png' || nombre_extension === 'jpg' || nombre_extension === 'gif') {
-
-                //Se sube la imagen del equipo
-                Liga.findByIdAndUpdate(idLiga, { imagen: nombre_archivo }, { new: true }, (err, ligaEditada) => {
-                    return res.status(200).send({ ligaEditada });
-                })
-            } else {
-
-                //Se elimina el archivo subido no permitido
-                return eliminarArchivo(res, direccionArchivo, 'Tipo de imagen no permitida');
-            }
-        } else {
-            return res.status(500).send({ mensaje: "No se ha subido ningun archivo" })
-        }
     })
 }
 
