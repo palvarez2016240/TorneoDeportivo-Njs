@@ -3,7 +3,7 @@ const app = require("./app");
 
 var Admin = require("./src/controladores/usuario.controlador")
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb+srv://admin:admin@dbtorneodeportivo.ors0h.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {useNewUrlParser: true, useUnifiedTopology:true}).then(()=>{
+mongoose.connect('mongodb+srv://admin:admin@dbtornedeportivo.uw9oo.mongodb.net/myFirstDatabase?retryWrites=true&w=majority', {useNewUrlParser: true, useUnifiedTopology:true}).then(()=>{
 
     console.log('Se encuentra conectado a la base de datos');
     
