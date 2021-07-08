@@ -212,7 +212,7 @@ function subirImagen(req, res) {
         var idUsuario = ligaEncontrada.usuario;
 
         //Validar dueño del equipo
-        if (req.user.sub != idUsuario) {
+        if (req.user.sub != idUsuario || req.user.rol != 'ROL_ADMINAPP') {
             return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
         }
 
