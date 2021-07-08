@@ -4,7 +4,8 @@ var User = require('../modelos/usuario.model');
 var Liga = require('../modelos/liga.model');
 var equipo = require('../modelos/equipos.model');
 var fs = require('fs');
-var path = require('path')
+var path = require('path');
+const imgbbUploader = require("imgbb-uploader");
 
 
 //  Registrar una liga
@@ -237,8 +238,14 @@ function subirImagen(req, res) {
 
                     //Se sube la imagen del equipo
                     Liga.findByIdAndUpdate(idLiga, { imagen: nombre_archivo }, { new: true }, (err, ligaEditada) => {
+
+                        imgbbUploader("819c1e6da2792a76691f125026f55383", "./src/imagenes/ligas/" + nombre_archivo)
+                        .then((response) => console.log(response))
+                        .catch((error) => console.error(error));
+
                         return res.status(200).send({ ligaEditada });
                     })
+
                 } else {
 
                     //Se elimina el archivo subido no permitido
