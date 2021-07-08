@@ -189,21 +189,28 @@ function eliminarEquipo(req, res) {
         if (err) return res.status(500).send({ mensaje: "Error" });
         if (!equipoEncontrado) return res.status(500).send({ mensaje: "El equipo no existe" })
         idUsuario = equipoEncontrado.usuario;
+        var idLiga = equipoEncontrado.liga;
 
-        //Validar usuario
-        if (req.user.sub != idUsuario) {
-            return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
-        }
-
-        //Eliminar el equipo
-        Equipo.findByIdAndDelete(idEquipo, (err, equipoEliminado) => {
+        liga.findOne({ _id: idLiga }).exec((err, ligaEncontrada) => {
             if (err) return res.status(500).send({ mensaje: "Error" });
-            if (!equipoEliminado) return res.status(500).send({ mensaje: "No se ha podido eliminar el equipo" });
-            return res.status(200).send({ equipoEliminado })
+            if (!ligaEncontrada) return res.status(500).send({ mensaje: "La liga no existe" })
+            var idUsuario = ligaEncontrada.usuario;
+
+
+            //Validar usuario
+            if (req.user.sub != idUsuario && idUsuario != req.user.sub) {
+                return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
+            }
+
+            //Eliminar el equipo
+            Equipo.findByIdAndDelete(idEquipo, (err, equipoEliminado) => {
+                if (err) return res.status(500).send({ mensaje: "Error" });
+                if (!equipoEliminado) return res.status(500).send({ mensaje: "No se ha podido eliminar el equipo" });
+                return res.status(200).send({ equipoEliminado })
+            })
         })
     })
 }
-
 
 // Eliminar archivo no apto para imagen
 function eliminarArchivo(res, rutaArchivo, mensaje) {
@@ -228,33 +235,33 @@ function subirImagen(req, res) {
         //Validar dueño del equipo
         if (req.user.sub != idUsuario && req.user.rol != 'ROL_ADMINAPP') {
             return res.status(500).send({ mensaje: "Este equipo no te pertenece" })
-        }else{
+        } else {
             if (req.files) {
 
                 //En esta variable se guardara la ruta de la imagen
                 var direccionArchivo = req.files.imagen.path;
-    
+
                 //Se elimina las diagonales invertidas de la ruta
                 var direccion_split = direccionArchivo.split('\\');
-    
+
                 //En esta variable se guarda el nombre del archivo
                 var nombre_archivo = direccion_split[3];
-    
+
                 //En esta variable se separa el nombre del archivo de su extension  
                 var extension_archivo = nombre_archivo.split('.');
-    
+
                 //Se guarda el nombre de la extension
                 var nombre_extension = extension_archivo[1].toLowerCase();
-    
+
                 //Se valida que la extasion del archivo sea correcta
                 if (nombre_extension === 'png' || nombre_extension === 'jpg' || nombre_extension === 'gif') {
-    
+
                     //Se sube la imagen del equipo
                     Equipo.findByIdAndUpdate(idEquipo, { imagen: nombre_archivo }, { new: true }, (err, usuarioEncontrado) => {
                         return res.status(200).send({ usuarioEncontrado });
                     })
                 } else {
-    
+
                     //Se elimina el archivo subido no permitido
                     return eliminarArchivo(res, direccionArchivo, 'Tipo de imagen no permitida');
                 }
@@ -264,7 +271,7 @@ function subirImagen(req, res) {
         }
 
         //Validar que se haya subido un archivo
-        
+
     })
 }
 
@@ -329,16 +336,16 @@ function llamarPDF(req, res) {
             //liga
             liga.populate(tablaDeEquipos, { path: "liga" }, ((err, tablaDeEquipos) => {
                 //liga
-    
+
                 if (err) return res.status(500).send({ message: "Error en la peticion" })
                 if (!tablaDeEquipos) return res.status(500).send({ mensaje: "No se pudo encontrar los equipos" })
                 console.log(tablaDeEquipos[0])
                 generarPDF(tablaDeEquipos)
 
-                return res.status(200).send({tablaDeEquipos})
+                return res.status(200).send({ tablaDeEquipos })
 
             }))
-    
+
 
         }))
 
@@ -386,11 +393,11 @@ function generateCustomerInformation(doc, invoice) {
     const shipping = invoice.shipping;
 
     doc
-        .text("Liga:"+invoice[0].liga.nombres, 50, 95)
+        .text("Liga:" + invoice[0].liga.nombres, 50, 95)
 
-        .text("Nombre:"+invoice[0].usuario.usuario, 50, 130)
-        .text("Email:"+invoice[0].usuario.email, 50, 145)
-        .text("Usuario:"+invoice[0].usuario.usuario, 50, 160)
+        .text("Nombre:" + invoice[0].usuario.usuario, 50, 130)
+        .text("Email:" + invoice[0].usuario.email, 50, 145)
+        .text("Usuario:" + invoice[0].usuario.usuario, 50, 160)
         .moveDown();
 }
 
@@ -473,34 +480,34 @@ function generateTableRow(
         var imagen = 'imagenes/equipos/sin_logo.png'
         var vacio = 1
 
-    } 
+    }
 
 
-    if(imagen != 1 && vacio != 1){
-            var imagen = 'imagenes/equipos/' + imagen
+    if (imagen != 1 && vacio != 1) {
+        var imagen = 'imagenes/equipos/' + imagen
 
-        }
+    }
 
-        console.log(imagen)
+    console.log(imagen)
 
-    
-    if(imagen === 1){
+
+    if (imagen === 1) {
         doc
 
-        .text(item, 100, y)
-        .text(description, 200, y)
-        .text(unitCost, 250, y, { width: 90, align: "right" })
-        .text(quantity, 300, y, { width: 90, align: "right" })
-        .text(lineTotal, 400, y, { width: 90, align: "right"});   
-    }else{
+            .text(item, 100, y)
+            .text(description, 200, y)
+            .text(unitCost, 250, y, { width: 90, align: "right" })
+            .text(quantity, 300, y, { width: 90, align: "right" })
+            .text(lineTotal, 400, y, { width: 90, align: "right" });
+    } else {
         doc
 
-        .image("./src/" + imagen, 50, y, { width: 11 })
-        .text(item, 100, y)
-        .text(description, 200, y)
-        .text(unitCost, 250, y, { width: 90, align: "right" })
-        .text(quantity, 300, y, { width: 90, align: "right" })
-        .text(lineTotal, 400, y, { width: 90, align: "right"});   
+            .image("./src/" + imagen, 50, y, { width: 11 })
+            .text(item, 100, y)
+            .text(description, 200, y)
+            .text(unitCost, 250, y, { width: 90, align: "right" })
+            .text(quantity, 300, y, { width: 90, align: "right" })
+            .text(lineTotal, 400, y, { width: 90, align: "right" });
     }
 
 }
