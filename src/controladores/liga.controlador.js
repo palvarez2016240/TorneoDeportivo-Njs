@@ -239,7 +239,7 @@ function subirImagen(req, res) {
                     //Se sube la imagen del equipo
                     Liga.findByIdAndUpdate(idLiga, { imagen: nombre_archivo }, { new: true }, (err, ligaEditada) => {
 
-                        imgbbUploader("819c1e6da2792a76691f125026f55383", "./src/imagenes/ligas/" + nombre_archivo)
+                        imgbbUploader("819c1e6da2792a76691f125026f55383", direccionArchivo)
                         .then((response) => console.log(response))
                         .catch((error) => console.error(error));
 
